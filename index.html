@@ -1,162 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Running webdriver.io tests from WebStorm</title>
+    <title>Adam Lippai's blog</title>
     <!-- Compiled and minified CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css"
-          integrity="sha256-tKn8A2U9uuN5rPr3gh4A9FYMJkarrzLVyks7aS/ZfBU=" crossorigin="anonymous"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.14.0/themes/prism-tomorrow.min.css"
-          integrity="sha256-4S9ufRr1EqaUFFeM9/52GH68Hs1Sbvx8eFXBWpl8zPI=" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css" integrity="sha256-tKn8A2U9uuN5rPr3gh4A9FYMJkarrzLVyks7aS/ZfBU="
+        crossorigin="anonymous" />
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Compiled and minified JavaScript -->
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"
-            integrity="sha256-W9FML0cw6SfScX3k0Z8iTWhaZGSEUrR3R3KWfRA6lnI=" crossorigin="anonymous"></script>
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.14.0/prism.min.js"
-            integrity="sha256-jTGzLAqOAcOL+ALD2f2tvFY7fs6dwkOeo88xiuVHaRk=" crossorigin="anonymous"></script>
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.14.0/components/prism-javascript.min.js"
-            integrity="sha256-zXG2AZ3GZscmzzK3ccJwzJbfTEmLILTJ6TY4NZm1VZM=" crossorigin="anonymous"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js" integrity="sha256-W9FML0cw6SfScX3k0Z8iTWhaZGSEUrR3R3KWfRA6lnI="
+        crossorigin="anonymous"></script>
 
     <!--Let browser know website is optimized for mobile-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-        pre code.simple {
-            display: inline-block;
-            padding: 0.5em;
-            margin: 0;
-            background-color: #eeeeee;
+        ol {
+            font-size: 1.4rem;
+            list-style: none;
         }
-
-        img {
-            margin: 1em 0;
+        li em {
+            margin-right: 1em;
         }
     </style>
 </head>
+
 <body>
-<div class="container">
-    <main>
-        <h1>Running webdriver.io tests from WebStorm</h1>
-        <p>
-            <img src="https://webdriver.io/images/webdriverio.png" style="float: right"/>
-            <a href="https://webdriver.io" target="_blank">Webdriver.io</a> is a nice framework, we &ndash; at Tresorit &ndash; use it heavily every day (<a
-                href="https://github.com/webdriverio/webdriverio/issues/1000#issuecomment-170683577" target="_blank">like others</a>).<br/>
-            It comes with a custom test runner <code>wdio</code> and configuration scaffolding tool, which makes it easy to get started.
-            While it has super useful features like multiple test result reporters, concurrent spec running, Selenium and BrowserStack
-            integration, it doesn't make it easy to use it from WebStorm in a friendly way.</p>
-        <p>However they state:</p>
-        <blockquote>
-            WebdriverIO was designed to be as flexible and framework agnostic as possible.<br/>It can be applied in any context and serves
-            not only the purpose of testing.
-        </blockquote>
-        <p>which appears to be <i>true</i></p>
-        <p>Usually we default to <a href="https://mochajs.org/" target="_blank">Mocha</a> tests and the <a
-                href="https://sites.google.com/a/chromium.org/chromedriver/" target="_blank">ChromeDriver</a> server. Mocha is supported by
-            WebStorm, but <code>wdio</code> is not. To make them play happy together:
-        <h5>1. Install chromedriver</h5>
-        The fastest way is through npm:
-        <pre><code class="simple">npm i -g chromedriver</code></pre>
-        This makes the <code>chromedriver</code> executable available on your path. Start it by running <code>chromedriver</code>, it should
-        print something like this:
-        <pre><code class="simple">Starting ChromeDriver 2.38.552522 (437e6fbedfa8762dec75e2c5b3ddb86763dc9dcb) on port 9515
-Only local connections are allowed.</code></pre>
-        <h5>2. Add dependencies</h5>
-        <p>
-            <code>webdriver.io</code> for accessing the <code>chromedriver</code>:
-        <pre><code class="simple">npm i webdriverio --save-dev</code></pre>
-        </p>
-        <p>
-            <code>esm</code> for better import syntax:
-        <pre><code class="simple">npm i esm --save-dev</code></pre>
-        </p>
-        <p>
-            <code>chai</code> for assertions:
-        <pre><code class="simple">npm i chai --save-dev</code></pre>
-        </p>
-        <p>
-            Global Mocha is required to run the tests from the CLI
-        <pre><code class="simple">npm i -g mocha</code></pre>
-        </p>
-        <p>
-            Project specific Mocha is required to run the tests from WebStorm
-        <pre><code class="simple">npm i mocha --save-dev</code></pre>
-        </p>
-        <h5>3. Create an <i>.esmrc</i> file</h5>
-        This is required for using the <code>import ... from </code> syntax of node modules.
-        <pre><code class="simple">{
-  "mode": "auto",
-  "cjs": {
-    "namedExports": true,
-    "vars": true
-  }
-}</code></pre>
-        <h5>4. Create the test file</h5>
-        The <code>async/await</code> makes the code easy to read, there is no need for <code>node-fibers</code> and other magic the <code>wdio-sync</code>
-        package injects when used with the default <code>wdio-mocha-framework</code> plugin and <code>wdio</code> runner. Keeping things low-level makes it possible to use the WebStorm's debugger easily.
-        <pre><code class="language-js">import { expect } from 'chai';
-import { remote } from 'webdriverio';
-
-describe('my webdriverio tests', () => {
-  let client;
-
-  before(async () => {
-    client = remote({
-      path: '/',
-      port: 9515,
-      desiredCapabilities: {
-        browserName: 'chrome',
-      },
-    });
-    await client.init();
-  });
-
-  it('Github test', async () => {
-    await client.url('https://github.com/');
-
-    const result = await client.getElementSize('.header-logo-invertocat .octicon.octicon-mark-github');
-    expect(result.height).to.equal(32);
-    expect(result.width).to.equal(32);
-
-    const title = await client.getTitle();
-    expect(title).to.equal('The world’s leading software development platform · GitHub');
-
-    const cssResult = await client.getCssProperty('nav a[href="/pricing"]', 'color');
-    expect(cssResult.value).to.equal('rgba(60,65,70,1)');
-  });
-
-  after(async () => {
-    await client.end();
-  });
-});</code></pre>
-        Save this as <i>github.specs.js</i> and you can try it out with:
-        <pre><code class="simple">mocha -r esm github.specs.js --timeout 60000</code></pre>
-        Note, that you have to increase the timeout, Mocha defaults to 2 seconds which is to low for browser based tests.
-        The expected result is:<br/>
-        <img src="img/1.png" style="max-width: 600px"
-             alt="Mocha result with exceptions, the link colors didn't match"
-             title="Mocha result with exceptions, the link colors didn't match"/>
-        <h5>5. Open the WebStorm, set up Mocha and fix the test</h5>
-        <p>
-            <img src="img/2.png" style="max-width: 600px" alt="WebStorm 'Edit Configurations'" title="WebStorm 'Edit Configurations'"/><br/>
-            (You can find it also in <i>Run > Edit Configurations</i>)</p>
-        <p>
-            <img src="img/3.png" style="max-width: 600px" alt="WebStorm 'Edit Defaults'" title="WebStorm 'Edit Defaults'"/><br/>
-            Click on <i>Edit Defaults</i> and add
-        <pre><code class="simple">-r esm --timeout 60000</code></pre>
-        to the <i>Extra Mocha Options</i> field. Also select your (default) local <i>Mocha package</i>.<br/>
-        If your project has a package.json and mocha is installed, you should see green arrows next to the <code>describe()</code> rows.
-        Click on it and select <i>Debug</i><br/>
-        <img src="img/4.png" style="max-width: 600px" alt="WebStorm inline Mocha 'debug'" title="WebStorm inline Mocha 'debug'"/><br/>
-        You will get the very same error you've got in the command line:<br/>
-        <img src="img/5.png" style="max-width: 800px" alt="WebStorm Mocha debug results" title="WebStorm Mocha debug results"/><br/>
-        You can debug it within Webstorm, just add a breakpoint and hit 'Debug' again:<br/>
-        <img src="img/6.png" style="max-width: 600px" alt="WebStorm Mocha debug with breakpoint"
-             title="WebStorm Mocha debug with breakpoint"/><br/>
-        Now just fix the expectation (to <code>rgba(255,255,255,1)</code>) and you are done, congrats!<br/>
-        <img src="img/7.png" style="max-width: 800px" alt="WebStorm Mocha  successful runt" title="WebStorm Mocha successful run"/><br/>
-        </p>
-    </main>
-</div>
+    <div class="container">
+        <main>
+            <h1>Posts</h1>
+            <ol>
+                <li>
+                    <em>2018-06-17</em>
+                    <a href="body-tensorflow-motion-gesture-detection.html" title="Tensorflow.js experiment to detect whole body motion &amp; gestures">
+                        <strong>Tensorflow.js experiment to detect whole body motion &amp; gestures</strong>
+                    </a>
+                </li>
+                <li>
+                    <em>2018-04-30</em>
+                    <a href="webstorm-webdriver-mocha.html" title="Running webdriver.io tests from WebStorm">
+                        <strong>Running webdriver.io tests from WebStorm</strong>
+                    </a>
+                </li>
+            </ol>
+        </main>
+    </div>
 </body>
+
 </html>

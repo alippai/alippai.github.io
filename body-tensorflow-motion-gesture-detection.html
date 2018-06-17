@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Running webdriver.io tests from WebStorm</title>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css" integrity="sha256-tKn8A2U9uuN5rPr3gh4A9FYMJkarrzLVyks7aS/ZfBU="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.14.0/themes/prism-tomorrow.min.css" integrity="sha256-4S9ufRr1EqaUFFeM9/52GH68Hs1Sbvx8eFXBWpl8zPI="
+        crossorigin="anonymous" />
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Compiled and minified JavaScript -->
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js" integrity="sha256-W9FML0cw6SfScX3k0Z8iTWhaZGSEUrR3R3KWfRA6lnI="
+        crossorigin="anonymous"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.14.0/prism.min.js" integrity="sha256-jTGzLAqOAcOL+ALD2f2tvFY7fs6dwkOeo88xiuVHaRk="
+        crossorigin="anonymous"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.14.0/components/prism-javascript.min.js" integrity="sha256-zXG2AZ3GZscmzzK3ccJwzJbfTEmLILTJ6TY4NZm1VZM="
+        crossorigin="anonymous"></script>
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        pre code.simple {
+            display: inline-block;
+            padding: 0.5em;
+            margin: 0;
+            background-color: #eeeeee;
+        }
+
+        img {
+            margin: 1em 0;
+        }
+
+        main {
+            margin: 2em;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <main>
+            <h1>Tensorflow.js experiment to detect whole body motion &amp; gestures</h1>
+            <input type="file" id="load"/><br />
+            <span id="progress"></span>
+            <canvas id="output" width="1920" height="1080"></canvas>
+            <video preload="auto" width="1920" height="1080" id="input" style="display: none;"></video>
+        </main>
+    </div>
+    <script src="https://unpkg.com/@tensorflow/tfjs"></script>
+    <script src="https://unpkg.com/@tensorflow-models/posenet"></script>
+    <script type="module">
+        import { drawKeypoints, drawSkeleton } from './utils.js';
+
+        (async () => {
+            const results = [];
+            let timer = 0;
+            const multiplier = 0.5;
+            const net = await posenet.load(multiplier);
+            const videoElement = document.getElementById('input');
+            const canvas = document.getElementById('output');
+            const ctx = canvas.getContext('2d');
+
+            document.getElementById('load').addEventListener('change', function () {
+                videoElement.src = URL.createObjectURL(this.files[0]);
+                timer += 0.1;
+                videoElement.currentTime = timer;
+                videoElement.play();
+            });
+
+            videoElement.addEventListener('seeked', async () => {
+                await videoElement.pause();
+                document.getElementById('progress').innerText = Math.round(timer / videoElement.duration * 10000) / 100 + '%';
+                ctx.drawImage(videoElement, 0, 0);
+                const poses = await net.estimateMultiplePoses(canvas, undefined, undefined, undefined, 2);
+
+                drawKeypoints(poses[0].keypoints, 0, ctx);
+                drawKeypoints(poses[1].keypoints, 0, ctx);
+                drawSkeleton(poses[0].keypoints, 0, ctx);
+                drawSkeleton(poses[1].keypoints, 0, ctx);
+                results.push(poses);
+
+                timer += 0.1;
+                if (timer > videoElement.duration) {
+                    console.log(JSON.stringify(results));
+                    return;
+                };
+                videoElement.currentTime = timer;
+                
+                videoElement.play();
+            }, false);
+        })();
+    </script>
+</body>
+
+</html>
